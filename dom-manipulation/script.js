@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const localStorageKey = 'quotes';
     const sessionStorageKey = 'lastViewedQuote';
     const localStorageFilterKey = 'lastSelectedCategory';
-    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; // Replace with your mock API URL
+    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; 
   
     let quotes = JSON.parse(localStorage.getItem(localStorageKey)) || [
       { text: "Learning coding requires one to be very consistent.", category: "Facts" },
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = event.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = (e) => {
+          reader.onload = async (e) => {
             const importedQuotes = JSON.parse(e.target.result);
             quotes = quotes.concat(importedQuotes);
             localStorage.setItem(localStorageKey, JSON.stringify(quotes));
@@ -135,35 +135,36 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 5000);
     }
   
-    function fetchQuotesFromServer() {
-      fetch(serverUrl)
-        .then(response => response.json())
-        .then(serverQuotes => {
-          // Simulate conflict resolution
-          const localQuotesMap = new Map(quotes.map(q => [q.text, q]));
-          let hasConflict = false;
+    async function fetchQuotesFromServer() {
+      try {
+        const response = await fetch(serverUrl);
+        const serverQuotes = await response.json();
+        // Simulate conflict resolution
+        const localQuotesMap = new Map(quotes.map(q => [q.text, q]));
+        let hasConflict = false;
   
-          serverQuotes.forEach(serverQuote => {
-            const localQuote = localQuotesMap.get(serverQuote.title); // Assuming 'title' is used for text
-            if (localQuote) {
-              // Conflict: Update local storage with server data
-              if (serverQuote.body !== localQuote.text) {
-                hasConflict = true;
-                Object.assign(localQuote, { text: serverQuote.body });
-              }
-            } else {
-              quotes.push({ text: serverQuote.body, category: "Uncategorized" });
+        serverQuotes.forEach(serverQuote => {
+          const localQuote = localQuotesMap.get(serverQuote.title); // Assuming 'title' is used for text
+          if (localQuote) {
+            // Conflict: Update local storage with server data
+            if (serverQuote.body !== localQuote.text) {
+              hasConflict = true;
+              Object.assign(localQuote, { text: serverQuote.body });
             }
-          });
-  
-          if (hasConflict) {
-            showNotification('Conflicts resolved with server data.');
+          } else {
+            quotes.push({ text: serverQuote.body, category: "Uncategorized" });
           }
-          
-          localStorage.setItem(localStorageKey, JSON.stringify(quotes));
-          populateCategories();
-        })
-        .catch(error => showNotification('Error fetching quotes from server.'));
+        });
+  
+        if (hasConflict) {
+          showNotification('Conflicts resolved with server data.');
+        }
+  
+        localStorage.setItem(localStorageKey, JSON.stringify(quotes));
+        populateCategories();
+      } catch (error) {
+        showNotification('Error fetching quotes from server.');
+      }
     }
   
     function setupPeriodicFetching() {
