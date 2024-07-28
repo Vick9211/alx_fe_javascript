@@ -184,13 +184,70 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   
+    async function syncQuotes() {
+      try {
+        // Fetch the latest quotes from the server
+        const response = await fetch(serverUrl);
+        const serverQuotes = await response.json();
+        
+        // Create a map of server quotes for easy lookup
+        const serverQuotesMap = new Map(serverQuotes.map(q => [q.title, q])); // Assuming 'title' is used for text
+  
+        // Compare with local quotes and handle conflicts
+        const newQuotes = [];
+        let hasConflict = false;
+  
+        quotes.forEach(localQuote => {
+          const serverQuote = serverQuotesMap.get(localQuote.text);
+          if (serverQuote) {
+            if (serverQuote.body !== localQuote.text) {
+              hasConflict = true;
+              Object.assign(localQuote, { text: serverQuote.body });
+            }
+          } else {
+            newQuotes.push(localQuote);
+          }
+        });
+  
+        // Handle server quotes not present locally
+        serverQuotes.forEach(serverQuote => {
+          if (!quotes.find(q => q.text === serverQuote.title)) {
+            newQuotes.push({ text: serverQuote.body, category: "Uncategorized" });
+          }
+        });
+  
+        if (hasConflict) {
+          showNotification('Conflicts resolved with server data.');
+        }
+  
+        // Update local storage and the server with new data
+        quotes = [...quotes, ...newQuotes];
+        localStorage.setItem(localStorageKey, JSON.stringify(quotes));
+  
+        // Optional: POST new or updated quotes to the server
+        await Promise.all(newQuotes.map(async quote => {
+          await fetch(serverUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(quote)
+          });
+        }));
+  
+        populateCategories();
+      } catch (error) {
+        showNotification('Error syncing quotes with server.');
+      }
+    }
+  
     function setupPeriodicFetching() {
-      fetchQuotesFromServer(); // Initial fetch
-      setInterval(fetchQuotesFromServer, 60000); // Fetch every 60 seconds
+      syncQuotes(); // Initial sync
+      setInterval(syncQuotes, 60000);
     }
   
     function setupConflictResolution() {
-      // Manual conflict resolution option can be added here
+    
     }
   
     populateCategories();
