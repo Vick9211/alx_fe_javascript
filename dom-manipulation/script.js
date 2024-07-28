@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionStorage.setItem(sessionStorageKey, JSON.stringify(randomQuote));
     }
   
-    function populateCategoryFilter() {
+    function populateCategories() {
       const categories = new Set(quotes.map(quote => quote.category));
       categoryFilter.innerHTML = '<option value="all">All Categories</option>'; // Reset dropdown to only "All Categories" option
       categories.forEach(category => {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quotes.push(newQuote);
         localStorage.setItem(localStorageKey, JSON.stringify(quotes));
         addQuoteForm.reset();
-        populateCategoryFilter();
+        populateCategories(); // Update dropdown categories
       });
     }
   
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const importedQuotes = JSON.parse(e.target.result);
             quotes = quotes.concat(importedQuotes);
             localStorage.setItem(localStorageKey, JSON.stringify(quotes));
-            populateCategoryFilter();
+            populateCategories(); // Update dropdown categories
           };
           reader.readAsText(file);
         }
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   
-    populateCategoryFilter();
+    populateCategories(); // Populate categories on load
     createAddQuoteForm();
     createExportButton();
     createImportInput();
