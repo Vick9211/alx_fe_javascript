@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const localStorageKey = 'quotes';
     const sessionStorageKey = 'lastViewedQuote';
+    const localStorageFilterKey = 'lastSelectedCategory';
   
     let quotes = JSON.parse(localStorage.getItem(localStorageKey)) || [
       { text: "Learning coding requires one to be very consistent.", category: "Facts" },
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newQuoteButton = document.getElementById('newQuote');
     const exportButton = document.querySelector('#exportImportButtons button');
     const categoryFilter = document.getElementById('categoryFilter');
-    
+  
     function showRandomQuote() {
       const filteredQuotes = getFilteredQuotes();
       if (filteredQuotes.length === 0) {
@@ -27,12 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
   
     function populateCategoryFilter() {
       const categories = new Set(quotes.map(quote => quote.category));
+      categoryFilter.innerHTML = '<option value="all">All Categories</option>'; // Reset dropdown to only "All Categories" option
       categories.forEach(category => {
         const option = document.createElement('option');
         option.value = category;
         option.textContent = category;
         categoryFilter.appendChild(option);
       });
+  
+      // Restore the last selected category from local storage
+      const lastSelectedCategory = localStorage.getItem(localStorageFilterKey);
+      if (lastSelectedCategory) {
+        categoryFilter.value = lastSelectedCategory;
+      } else {
+        categoryFilter.value = 'all';
+      }
     }
   
     function getFilteredQuotes() {
@@ -44,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     function filterQuotes() {
       showRandomQuote();
+      localStorage.setItem(localStorageFilterKey, categoryFilter.value);
     }
   
     function createAddQuoteForm() {
@@ -124,4 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     createImportInput();
     loadLastViewedQuote();
     showRandomQuote();
+  
+    categoryFilter.addEventListener('change', filterQuotes);
   });
