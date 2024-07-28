@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const localStorageKey = 'quotes';
     const sessionStorageKey = 'lastViewedQuote';
     const localStorageFilterKey = 'lastSelectedCategory';
-    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; // Replace with your mock API URL
+    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; 
   
     let quotes = JSON.parse(localStorage.getItem(localStorageKey)) || [
       { text: "Learning coding requires one to be very consistent.", category: "Facts" },
@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addQuoteForm.reset();
         populateCategories();
   
-        // POST new quote to server
         postQuoteToServer(newQuote);
       });
     }
@@ -108,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const importInput = document.createElement('input');
       importInput.type = 'file';
       importInput.accept = 'application/json';
-      importInput.addEventListener('change', (event) => {
+      importInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (file) {
           const reader = new FileReader();
@@ -142,14 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await fetch(serverUrl);
         const serverQuotes = await response.json();
-        // Simulate conflict resolution
+
         const localQuotesMap = new Map(quotes.map(q => [q.text, q]));
         let hasConflict = false;
   
         serverQuotes.forEach(serverQuote => {
-          const localQuote = localQuotesMap.get(serverQuote.title); // Assuming 'title' is used for text
+          const localQuote = localQuotesMap.get(serverQuote.title);
           if (localQuote) {
-            // Conflict: Update local storage with server data
+          
             if (serverQuote.body !== localQuote.text) {
               hasConflict = true;
               Object.assign(localQuote, { text: serverQuote.body });
@@ -186,14 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
     async function syncQuotes() {
       try {
-        // Fetch the latest quotes from the server
+       
         const response = await fetch(serverUrl);
         const serverQuotes = await response.json();
         
-        // Create a map of server quotes for easy lookup
-        const serverQuotesMap = new Map(serverQuotes.map(q => [q.title, q])); // Assuming 'title' is used for text
+        const serverQuotesMap = new Map(serverQuotes.map(q => [q.title, q]));
   
-        // Compare with local quotes and handle conflicts
         const newQuotes = [];
         let hasConflict = false;
   
@@ -208,8 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuotes.push(localQuote);
           }
         });
-  
-        // Handle server quotes not present locally
+
         serverQuotes.forEach(serverQuote => {
           if (!quotes.find(q => q.text === serverQuote.title)) {
             newQuotes.push({ text: serverQuote.body, category: "Uncategorized" });
@@ -220,11 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
           showNotification('Conflicts resolved with server data.');
         }
   
-        // Update local storage and the server with new data
         quotes = [...quotes, ...newQuotes];
         localStorage.setItem(localStorageKey, JSON.stringify(quotes));
   
-        // Optional: POST new or updated quotes to the server
         await Promise.all(newQuotes.map(async quote => {
           await fetch(serverUrl, {
             method: 'POST',
@@ -236,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
   
         populateCategories();
+        alert('Quotes synced with server!');
       } catch (error) {
         showNotification('Error syncing quotes with server.');
       }
