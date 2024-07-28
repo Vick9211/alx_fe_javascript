@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const localStorageKey = 'quotes';
     const sessionStorageKey = 'lastViewedQuote';
     const localStorageFilterKey = 'lastSelectedCategory';
-    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; 
+    const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; // Replace with your mock API URL
   
     let quotes = JSON.parse(localStorage.getItem(localStorageKey)) || [
       { text: "Learning coding requires one to be very consistent.", category: "Facts" },
@@ -85,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(localStorageKey, JSON.stringify(quotes));
         addQuoteForm.reset();
         populateCategories();
+  
+        // POST new quote to server
+        postQuoteToServer(newQuote);
       });
     }
   
@@ -164,6 +167,20 @@ document.addEventListener('DOMContentLoaded', () => {
         populateCategories();
       } catch (error) {
         showNotification('Error fetching quotes from server.');
+      }
+    }
+  
+    async function postQuoteToServer(quote) {
+      try {
+        await fetch(serverUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(quote)
+        });
+      } catch (error) {
+        showNotification('Error posting quote to server.');
       }
     }
   
